@@ -14,7 +14,6 @@ Route::post('singin',[UserController::class,'singin']);
 Route::get('logout', [YourController::class, 'logout']);
 
 
-
 Route::get('/',[UserController::class, 'index']);
 Route::get('about',[UserController::class,'about']);
 Route::get('services',[UserController::class,'services']);
