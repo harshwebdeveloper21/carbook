@@ -7,6 +7,9 @@ use App\Models\car;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Session;
+use GuzzleHttp\Client;
 class UserController extends Controller
 {
     //
@@ -23,46 +26,61 @@ class UserController extends Controller
     }
 
     public function UserLogin(Request $request){
-        $validatedData = $request->validate([
-            'username' => 'required|string|max:255',
-            'address' => 'required|email',
-            'password' => 'required|min:8|confirmed',
-            'phone' => 'required|numeric',
-        ]);
+            $validatedData = $request->validate([
+                'username' => 'required|string|max:255',
+                'address' => 'required|email|unique:users,email', 
+                'password' => 'required|min:8|confirmed',
+                'phone' => 'required|numeric',
+            ]);
+        
+            try {
+                $user = User::create([
+                    'name' => $validatedData['username'],
+                    'email' => $validatedData['address'],
+                    'password' => Hash::make($validatedData['password']),
+                    'phone' => $validatedData['phone'],
+                ]);
 
-        $user = User::create([
-            'name' => $validatedData['username'],
-            'email' => $validatedData['address'],
-            'password' => Hash::make($validatedData['password']),
-            'phone' => $validatedData['phone'],
-        ]);
-
-
-        return response()->json(['msg' => 'success']);
+                return response()->json(['msg' => 'success']);
+            } catch (QueryException $e) {
+                if ($e->getCode() === '23000') { 
+                    return response()->json(['msg' => 'error', 'message' => 'Email already exists.'], 409);
+                } else {
+                    return response()->json(['msg' => 'error', 'message' => 'Database error.'], 500);
+                }
+            } catch (\Exception $e) {
+                return response()->json(['msg' => 'error', 'message' => 'An unexpected error occurred.'], 500);
+            }
 
     }
 
-    public function singin(Request $request){
-
-        $username = $request->post('username');
-        $password = $request->post('password');
+    public function singin(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'name' => 'required',
+            'password' => 'required'
+        ]);
     
-        $user = User::where('name', $username)->first();
+        $user = User::where('name', $request->name)->first();
     
-        if ($user && Hash::check($password, $user->password)) {
-            session(['user' => $user]);
-            return response()->json(['msg' => 'success']);
+        if ($user && Hash::check($request->password, $user->password)) {
+            // Generate token
+            $token = $user->createToken('MyApp')->accessToken;
+            if($token){                
+            return response()->json(['msg' => 'success'], 200);
+            }
         } else {
-            return response()->json(['msg' => 'error', 'errors' => ['Invalid credentials']]);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
-
     }
 
     public function logout()
         {
-            session()->forget('user');
+            session()->forget('name');
+            session()->forget('email');
 
-            return response()->json(['msg' => 'logged out']);
+            return view('registration');
         }
 
     public function about(){
