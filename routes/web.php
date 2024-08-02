@@ -11,7 +11,7 @@ use App\Http\Controllers\EmailController;
 Route::get('login',[UserController::class,'login']);
 Route::post('UserLogin',[UserController::class,'UserLogin']);
 Route::post('singin',[UserController::class,'singin']);
-Route::get('logout', [YourController::class, 'logout']);
+Route::get('logout', [UserController::class, 'logout']);
 
 
 Route::get('/',[UserController::class, 'index']);
@@ -28,10 +28,7 @@ Route::Post('carsearch',[CarController::class,'carsearch']);
 Route::Post('payment',[StripeController::class,'processPayment']);
 
 
-// Route::get('/send-test-email', function () {
-//     Mail::to('recipient@example.com')->send(new TestEmail());
-//     return 'Email sent!';
-// });
+
 
 Route::get('sendbasicemail', [EmailController::class, 'basic_email']);
 Route::get('sendhtmlemail', [EmailController::class, 'html_email']);

@@ -22,7 +22,7 @@
                 section {
                 position: relative;
                 min-height: 100vh;
-                /* background-color: #f8dd30; */
+                background-color: #1d1d1b;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -188,14 +188,17 @@
 
 <body>
     <section>
+        <div class="error text-danger"></div>
+
       <div class="container">
         <div class="user signinBx">
-          <div class="imgBx"><img src="https://raw.githubusercontent.com/WoojinFive/CSS_Playground/master/Responsive%20Login%20and%20Registration%20Form/img1.jpg" alt="" /></div>
+            {{-- https://raw.githubusercontent.com/WoojinFive/CSS_Playground/master/Responsive%20Login%20and%20Registration%20Form/img1.jpg --}}
+          <div class="imgBx"><img src="{{ asset('assets/images/bg_3.jpg') }}" alt="" /></div>
           <div class="formBx">
             <form action="" id="singin" onsubmit="return false;">
               <h2>Sign In</h2>
               @csrf
-              <input type="text" name="username" placeholder="Username" required>
+              <input type="text" name="name" placeholder="name" required>
                 <input type="password" name="password" placeholder="Password" required>
               <input type="submit" name="" value="Login" />
               <p class="signup">
@@ -205,15 +208,18 @@
             </form>
           </div>
         </div>
+
         <div class="user signupBx">
+
           <div class="formBx">
+
             <form action="" id="UserData">
                 <h2>Create an account</h2>
                 <input type="text" placeholder="Username" name="username"/>
                 <input type="email" placeholder="Email Address" name="address"/>
                 <input type="password" placeholder="Create Password" name="password"/>
                 <input type="password" placeholder="Confirm Password" name="password_confirmation"/>
-                <input type="number" placeholder="Phone Number" name="phone" min="8" max="14">
+                <input type="number" placeholder="Phone Number" name="phone" maxlength="14" minlength="8" pattern="\d{8,14}">
                 <input type="submit" value="Sign Up"/>
               <p class="signup">
                 Already have an account ?
@@ -221,7 +227,7 @@
               </p>
             </form>
           </div>
-          <div class="imgBx"><img src="https://raw.githubusercontent.com/WoojinFive/CSS_Playground/master/Responsive%20Login%20and%20Registration%20Form/img2.jpg" alt="" /></div>
+          <div class="imgBx"><img src="{{asset('assets/images/bg_3.jpg')}}" alt="" /></div>
         </div>
       </div>
     </section>
@@ -232,6 +238,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
     integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous">
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
     <script>
         const toggleForm = () => {
             const container = document.querySelector('.container');
@@ -240,33 +248,46 @@
     </script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf/notyf.min.css">
+<script src="https://cdn.jsdelivr.net/npm/notyf/notyf.min.js"></script>
+
 <script>
-            $(document).ready(function() {
+                  $(document).ready(function() {
+                var notyf = new Notyf({
+                              position: {
+                        x: 'center', 
+                        y: 'top' 
+                    }
+                });
+
                 $('#UserData').on('submit', function(e) {
                     e.preventDefault(); 
 
                     var formData = $(this).serialize();
                     $.ajaxSetup({
                         headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                                    }
-                            });
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
                     $.ajax({
                         url: '{{ url("UserLogin") }}', 
                         method: 'POST',
                         data: formData,
                         success: function(response) {
                             if(response.msg === 'success') {
-                                alert('user login')
-                                
+                                notyf.success('User create account successful please singup now');
+                                setTimeout(function() {
+                                    location.reload();                      
+                                }, 2000)
                             } else {
-                                alert('An error occurred. Please try again.');
+                                notyf.error('Error: ' + response.message);
                             }
                         },
                         error: function(xhr) {
                             var errors = xhr.responseJSON.errors;
                             $.each(errors, function(key, value) {
-                                alert(value);
+                                // notyf.error(value);
+                                notyf.error('Request failed: ' + xhr.responseJSON.message);
                             });
                         }
                     });
@@ -274,37 +295,54 @@
             });
 
             $(document).ready(function() {
-                $('#singin').on('submit', function(e) {
-                    e.preventDefault(); 
+              var notyf = new Notyf({
+                  position: {
+                      x: 'center', // 'left', 'center', 'right'
+                      y: 'top' // 'top', 'center', 'bottom'
+                  }
+              });
+            $('#singin').on('submit', function(e) {
+                  e.preventDefault(); 
 
-                    var formData = $(this).serialize();
-                    $.ajaxSetup({
-                        headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                                    }
-                            });
-                    $.ajax({
-                        url: '{{ url("singin") }}', 
-                        method: 'POST',
-                        data: formData,
-                        success: function(response) {
-                            if(response.msg === 'success') {
-                                window.location.href = "{{ url('/') }}";
-                            } else {
-                                alert('An error occurred. Please try again.');
-                            }
-                        },
-                        error: function(xhr) {
-                            var errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                alert(value);
-                            });
-                        }
-                    });
-                });
+                  var formData = $(this).serialize();
+                  $.ajaxSetup({
+                      headers: {
+                          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                      }
+                  });
+                  $.ajax({
+                      url: '{{ url("singin") }}', 
+                      method: 'POST',
+                      data: formData,
+                      success: function(response) {
+                          if(response.msg === 'success') {
+                              notyf.success('Sign in successful. Redirecting...');
+                              setTimeout(function() {
+                                  window.location.href = "{{ url('/') }}";
+                              }, 2000); // 2 seconds delay to show the notification
+                          } else {
+                              notyf.error('An error occurred. Please try again.');
+                          }
+                      },
+                      error: function(xhr) {
+                          var errors = xhr.responseJSON.errors;
+                          $.each(errors, function(key, value) {
+                              notyf.error(value);
+                          });
+                      }
+                  });
+              });
             });
 </script>
+<script>
+  @if(session('success'))
+      toastr.success("{{ session('success') }}");
+  @endif
 
+  @if($errors->any())
+      toastr.error("{{ $errors->first() }}");
+  @endif
+</script>
 </body>
 
 </html>
